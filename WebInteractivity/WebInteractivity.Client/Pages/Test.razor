@@ -2,10 +2,10 @@
 @using System.Net.Http.Headers
 @using Microsoft.AspNetCore.Authorization
 @using System.Net
-@inject HttpClient _httpClient
 @attribute [Authorize]
 
-@* @inject IHttpClientFactory factory *@
+@* @inject HttpClient _httpClient *@
+@inject IHttpClientFactory factory
 
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender:false))
 
@@ -18,17 +18,17 @@ else
     <h1>test </h1>
     <table class="table table-striped">
         <thead>
-        <tr>
-            <th>Header</th>
-        </tr>
+            <tr>
+                <th>Header</th>
+            </tr>
         </thead>
         <tbody>
-        @foreach (var str in stringList)
-        {
-            <tr>
-                <td>@str</td>
-            </tr>
-        }
+            @foreach (var str in stringList)
+            {
+                <tr>
+                    <td>@str</td>
+                </tr>
+            }
         </tbody>
     </table>
 
@@ -37,38 +37,40 @@ else
 
 @code
 {
-    private List<string> stringList = new List<string>();
+    private List<string> stringList = new();
 
     // using httpclient
 
-    protected override async Task OnInitializedAsync()
-    {
-        await Task.Delay(500);
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     await Task.Delay(500);
 
-        var request = new HttpRequestMessage(HttpMethod.Get, _httpClient.BaseAddress + "api/test");
-        request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
+    //     var request = new HttpRequestMessage(HttpMethod.Get, _httpClient.BaseAddress + "api/test");
+    //     request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
-        using var response = await _httpClient.SendAsync(request, CancellationToken.None);
-        
-    // code here is always 200 
-        switch (response.StatusCode)
-        {
-            case HttpStatusCode.Forbidden:
-            {
-                Console.WriteLine("Forbiden!");
-                break;
-            }
-            default:
-            {
-                Console.WriteLine("All good!");
-                stringList = await response.Content.ReadFromJsonAsync<List<string>>();
+    //     using var response = await _httpClient.SendAsync(request, CancellationToken.None);
 
-                break;
-            }
-        }
-
-        stringList = new List<string>();
-    }
+    //     // status code is always 200 even when the user is not in the role and it should be 403 in that case
+    //     switch (response.StatusCode)
+    //     {
+    //         case HttpStatusCode.OK:
+    //             {
+    //                 Console.WriteLine("All good!");
+    //                 stringList = await response.Content.ReadFromJsonAsync<List<string>>();
+    //                 break;
+    //             }
+    //         case HttpStatusCode.Forbidden:
+    //             {
+    //                 Console.WriteLine("Forbiden!");
+    //                 break;
+    //             }
+    //         default:
+    //             {
+    //                 Console.WriteLine("Some other scenario");
+    //                 break;
+    //             }
+    //     }
+    // }
 
     private void AddTableRow()
     {
@@ -78,15 +80,34 @@ else
     }
 
     // using httpclient factory
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     var _httpClient = factory.CreateClient("WebAPI");
+    protected override async Task OnInitializedAsync()
+    {
+        var _httpClient = factory.CreateClient("WebAPI");
 
-    //     var request = new HttpRequestMessage(HttpMethod.Get, _httpClient.BaseAddress + "api/test");
-    //     request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
+        var request = new HttpRequestMessage(HttpMethod.Get, _httpClient.BaseAddress + "api/test");
+        request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
-    //     using var response = await _httpClient.SendAsync(request, CancellationToken.None);
+        using var response = await _httpClient.SendAsync(request, CancellationToken.None);
 
-    //     stringList = await response.Content.ReadFromJsonAsync<List<string>>();
-    // }
+        // status code is always 200 even when the user is not in the role and it should be 403 in that case
+        switch (response.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                {
+                    Console.WriteLine("All good!");
+                    stringList = await response.Content.ReadFromJsonAsync<List<string>>();
+                    break;
+                }
+            case HttpStatusCode.Forbidden:
+                {
+                    Console.WriteLine("Forbiden!");
+                    break;
+                }
+            default:
+                {
+                    Console.WriteLine("Some other scenario");
+                    break;
+                }
+        }
+    }
 }

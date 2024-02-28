@@ -12,9 +12,9 @@ builder.Services.AddTransient<CookieHandler>();
 builder.Services.AddHttpClient("WebAPI", client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
                 .AddHttpMessageHandler<CookieHandler>();
 
-// this one is just example how to do it with factory it is also used in Test component
-//builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>()
-//                .CreateClient("WebAPI"));
+// TODO added IHttpClientFactory as Scoped and created WebAPI HttpClient
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>()
+                .CreateClient("WebAPI"));
 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using WebInteractivity.Components;
 using WebInteractivity.Components.Account;
 using WebInteractivity.Data;
 
