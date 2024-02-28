@@ -1,0 +1,92 @@
+﻿@page "/test"
+@using System.Net.Http.Headers
+@using Microsoft.AspNetCore.Authorization
+@using System.Net
+@inject HttpClient _httpClient
+@attribute [Authorize]
+
+@* @inject IHttpClientFactory factory *@
+
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender:false))
+
+@if (stringList.Count == 0)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <h1>test </h1>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Header</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var str in stringList)
+        {
+            <tr>
+                <td>@str</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    <button class="btn btn-primary" @onclick="AddTableRow">Add row</button>
+}
+
+@code
+{
+    private List<string> stringList = new List<string>();
+
+    // using httpclient
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(500);
+
+        var request = new HttpRequestMessage(HttpMethod.Get, _httpClient.BaseAddress + "api/test");
+        request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+        using var response = await _httpClient.SendAsync(request, CancellationToken.None);
+        
+    // code here is always 200 
+        switch (response.StatusCode)
+        {
+            case HttpStatusCode.Forbidden:
+            {
+                Console.WriteLine("Forbiden!");
+                break;
+            }
+            default:
+            {
+                Console.WriteLine("All good!");
+                stringList = await response.Content.ReadFromJsonAsync<List<string>>();
+
+                break;
+            }
+        }
+
+        stringList = new List<string>();
+    }
+
+    private void AddTableRow()
+    {
+        stringList.Add("JS");
+
+        StateHasChanged();
+    }
+
+    // using httpclient factory
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     var _httpClient = factory.CreateClient("WebAPI");
+
+    //     var request = new HttpRequestMessage(HttpMethod.Get, _httpClient.BaseAddress + "api/test");
+    //     request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+    //     using var response = await _httpClient.SendAsync(request, CancellationToken.None);
+
+    //     stringList = await response.Content.ReadFromJsonAsync<List<string>>();
+    // }
+}
